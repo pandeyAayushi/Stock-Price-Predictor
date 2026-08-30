@@ -1,0 +1,49 @@
+/* Custom CSS for Stock Price Predictor */
+
+body {
+  background-color: #080c14;
+  color: #f1f5f9;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d1322;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f293d;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* Glowing text effects */
+.glow-cyan {
+  text-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+}
+.glow-indigo {
+  text-shadow: 0 0 16px rgba(99, 102, 241, 0.4);
+}
+
+/* Active indicator button styles */
+.btn-toggle-active {
+  ring-width: 2px;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+}
+
+/* Glassmorphism subtle background */
+.glass-panel {
+  background: rgba(17, 23, 38, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Transition utility */
+.smooth-all {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}

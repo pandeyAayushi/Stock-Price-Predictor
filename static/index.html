@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indian Stock Price Predictor (NSE/BSE) | ML & FastAPI</title>
+  
+  <!-- Multi-CDN Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Multi-CDN Chart.js with fallback -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    if (typeof Chart === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>');
+    }
+  </script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  
+  <script>
+    if (window.tailwind) {
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace'],
+            },
+            colors: {
+              brand: {
+                50: '#eef2ff',
+                100: '#e0e7ff',
+                500: '#6366f1',
+                600: '#4f46e5',
+                700: '#4338ca',
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#090d16] text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Navigation Bar -->
+  <header class="border-b border-slate-800/80 bg-[#0c1220]/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <span class="text-white font-black text-lg">₹</span>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-indigo-300">
+            Indian Stock Predictor
+          </h1>
+          <p class="text-xs text-slate-400 font-mono">NSE • BSE • INR (₹) • Machine Learning</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+          NSE Live Feed
+        </span>
+        <a href="/docs" target="_blank" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          API Docs
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Top Controls Section -->
+    <div class="bg-[#111726] border border-slate-800/90 rounded-2xl p-5 shadow-xl">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-end">
+        
+        <!-- Stock Symbol Search -->
+        <div class="lg:col-span-4 space-y-2">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Indian Stock Symbol (NSE / BSE)</label>
+          <div class="relative flex rounded-xl shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              id="tickerInput" 
+              value="RELIANCE" 
+              placeholder="e.g. RELIANCE, TCS, INFY, HDFCBANK, TATAMOTORS" 
+              class="w-full bg-[#0a0f1d] border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm font-semibold text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase transition font-mono"
+            />
+          </div>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="lg:col-span-3 space-y-2">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">ML Model</label>
+          <select 
+            id="modelSelect"
+            class="w-full bg-[#0a0f1d] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+          >
+            <option value="linear_regression">Linear Regression (Baseline)</option>
+            <option value="ridge">Ridge Regression (L2 Regularized)</option>
+            <option value="random_forest">Random Forest Regressor</option>
+            <option value="gradient_boosting">Gradient Boosting Regressor</option>
+          </select>
+        </div>
+
+        <!-- Timeframe and Horizon -->
+        <div class="lg:col-span-3 grid grid-cols-2 gap-3">
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">History Period</label>
+            <select 
+              id="periodSelect"
+              class="w-full bg-[#0a0f1d] border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            >
+              <option value="6mo">6 Months</option>
+              <option value="1y" selected>1 Year</option>
+              <option value="2y">2 Years</option>
+              <option value="5y">5 Years</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Forecast Days</label>
+            <select 
+              id="horizonSelect"
+              class="w-full bg-[#0a0f1d] border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            >
+              <option value="3">3 Days</option>
+              <option value="7" selected>7 Days (1 Wk)</option>
+              <option value="14">14 Days (2 Wk)</option>
+              <option value="30">30 Days (1 Mo)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Train & Predict Button -->
+        <div class="lg:col-span-2">
+          <button 
+            id="predictBtn" 
+            class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-600/30 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <svg id="btnIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <span id="btnText">Predict</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Quick Ticker Chips -->
+      <div class="mt-4 pt-3.5 border-t border-slate-800/80 flex flex-wrap items-center gap-2">
+        <span class="text-xs font-medium text-slate-400 mr-1">Popular Nifty 50:</span>
+        <div id="popularChips" class="flex flex-wrap gap-1.5">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Error / Notification Toast -->
+    <div id="errorAlert" class="hidden p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <svg class="w-5 h-5 text-rose-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span id="errorMessage">Error notification</span>
+      </div>
+      <button onclick="hideError()" class="text-rose-400 hover:text-rose-200 text-xs uppercase font-bold tracking-wider">Dismiss</button>
+    </div>
+
+    <!-- KPI Metric Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      
+      <!-- Current Stock Price -->
+      <div class="bg-[#111726] border border-slate-800/90 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+          <span>Current Price</span>
+          <span id="stockSymbolBadge" class="font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-[11px]">RELIANCE</span>
+        </div>
+        <div class="mt-2">
+          <div id="cardCurrentPrice" class="text-2xl font-bold text-white font-mono">₹---.--</div>
+          <p id="cardCompanyName" class="text-xs text-slate-400 truncate mt-0.5">Reliance Industries</p>
+        </div>
+      </div>
+
+      <!-- Predicted Future Target -->
+      <div class="bg-[#111726] border border-slate-800/90 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+          <span>Forecast Target</span>
+          <span id="forecastDaysBadge" class="text-slate-400 bg-slate-800 px-2 py-0.5 rounded text-[11px] font-mono">+7 Days</span>
+        </div>
+        <div class="mt-2">
+          <div id="cardForecastPrice" class="text-2xl font-bold text-cyan-300 font-mono">₹---.--</div>
+          <div id="cardForecastChange" class="text-xs font-semibold font-mono text-slate-400 mt-0.5 flex items-center gap-1">
+            <span>---</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Market Signal Badge -->
+      <div class="bg-[#111726] border border-slate-800/90 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Trend Signal</div>
+        <div class="mt-2">
+          <div id="signalBadge" class="inline-flex items-center px-3 py-1.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300">
+            NEUTRAL
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Projected trajectory slope</p>
+        </div>
+      </div>
+
+      <!-- Model R2 Accuracy -->
+      <div class="bg-[#111726] border border-slate-800/90 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+          <span>Model R² Score</span>
+          <span class="text-xs text-slate-500 font-mono">Test Set</span>
+        </div>
+        <div class="mt-2">
+          <div id="cardR2Score" class="text-2xl font-bold text-indigo-300 font-mono">--%</div>
+          <p class="text-[11px] text-slate-400 mt-0.5">Coefficient of determination</p>
+        </div>
+      </div>
+
+      <!-- Error Metric (MAE / RMSE) -->
+      <div class="bg-[#111726] border border-slate-800/90 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+          <span>Mean Error (MAE)</span>
+          <span id="cardDirectionalAcc" class="text-[11px] font-mono text-emerald-400">Dir: --%</span>
+        </div>
+        <div class="mt-2">
+          <div id="cardMAE" class="text-2xl font-bold text-slate-100 font-mono">₹---</div>
+          <p id="cardMAPE" class="text-[11px] text-slate-400 mt-0.5">MAPE: --%</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Chart Section -->
+    <div class="bg-[#111726] border border-slate-800/90 rounded-2xl p-5 shadow-xl space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            Historical Price & AI Forecast Projection (INR ₹)
+          </h2>
+          <p class="text-xs text-slate-400">Solid line: Actual NSE/BSE close • Dotted line: Machine Learning trajectory</p>
+        </div>
+
+        <!-- Chart Indicator Toggles -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="toggleSMA20" onclick="toggleDataset('sma20')" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition cursor-pointer">
+            SMA 20
+          </button>
+          <button id="toggleSMA50" onclick="toggleDataset('sma50')" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition cursor-pointer">
+            SMA 50
+          </button>
+          <button id="toggleBacktest" onclick="toggleDataset('backtest')" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20 transition cursor-pointer">
+            Backtest Fit
+          </button>
+          <button id="toggleVolume" onclick="toggleDataset('volume')" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition cursor-pointer">
+            Volume
+          </button>
+        </div>
+      </div>
+
+      <!-- Chart Container -->
+      <div class="relative w-full h-[430px]" id="chartWrapper">
+        <canvas id="stockChart"></canvas>
+        <div id="chartLoadingOverlay" class="absolute inset-0 bg-[#111726]/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl space-y-3 z-10 transition-opacity">
+          <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <span class="text-sm font-medium text-slate-300">Fetching NSE data & training model...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Grid: Forecast Table + Feature Importance -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Forecast Table -->
+      <div class="lg:col-span-6 bg-[#111726] border border-slate-800/90 rounded-2xl p-5 shadow-xl">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center justify-between">
+          <span>Day-by-Day Price Forecast (₹ INR)</span>
+          <span class="text-xs font-normal text-slate-400 font-mono">Autoregressive ML</span>
+        </h3>
+        <div class="overflow-x-auto max-h-64 overflow-y-auto pr-1">
+          <table class="w-full text-left text-xs">
+            <thead class="text-slate-400 uppercase bg-[#0d1322] sticky top-0 font-mono">
+              <tr>
+                <th class="py-2.5 px-3 rounded-l-lg">Date</th>
+                <th class="py-2.5 px-3">Predicted Price (₹)</th>
+                <th class="py-2.5 px-3">Daily Change</th>
+                <th class="py-2.5 px-3 rounded-r-lg text-right">Cumulative %</th>
+              </tr>
+            </thead>
+            <tbody id="forecastTableBody" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+              <tr>
+                <td colspan="4" class="py-4 text-center text-slate-500">Run prediction to view table</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Feature Importance / Technical Drivers -->
+      <div class="lg:col-span-6 bg-[#111726] border border-slate-800/90 rounded-2xl p-5 shadow-xl">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center justify-between">
+          <span>Model Technical Drivers</span>
+          <span id="modelLabelBadge" class="text-xs font-normal text-indigo-400 font-mono">Linear Regression</span>
+        </h3>
+        <p class="text-xs text-slate-400 mb-3">Relative influence of technical indicators and price lag features in model decision making.</p>
+        <div id="featureImportanceContainer" class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+          <!-- Dynamic Feature Bars -->
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-xs text-slate-500 border-t border-slate-800/80 mt-12 space-y-1">
+    <p>Indian Stock Price Predictor • Powered by FastAPI & Scikit-Learn</p>
+    <p class="text-[11px] text-slate-600">Educational & demonstration tool. Not financial advice.</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
